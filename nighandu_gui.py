@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPushButton
-from PyQt5.QtWidgets import QSizePolicy, QScrollArea
+from PyQt5.QtWidgets import QSizePolicy, QScrollArea,  QCompleter
 from PyQt5.QtCore import Qt,  pyqtSlot
 from nighandu import Nighandu
 
@@ -31,8 +31,15 @@ class NighanduGui(QWidget):
         self.searchButton.clicked.connect(self.searchButtonClicked)
 
 
+        wordList = self.nighandu.word_list()
         self.wordInput = QLineEdit(self)
         self.wordInput.setFixedHeight(30)
+
+        completer = QCompleter(wordList, self)
+        completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.wordInput.setCompleter(completer)
+
+
         self.wordInput.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.wordInput.returnPressed.connect(self.searchButtonClicked)
 
@@ -46,6 +53,8 @@ class NighanduGui(QWidget):
         self.wordViewerScrollArea.setWidgetResizable(True)
         self.wordViewerScrollArea.setWidget(self.wordViewerLabel)
         self.wordViewerScrollArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.wordViewerLabel.setMargin(20)
+        self.wordViewerLabel.setAlignment(Qt.AlignTop)
 
         mainLayout.addWidget(self.wordViewerScrollArea)
  
@@ -88,6 +97,7 @@ class NighanduGui(QWidget):
         idioms = []
         abbreviations = []
         auxiliaryVerbs = []
+        meanings = []
 
 
 
@@ -126,6 +136,27 @@ class NighanduGui(QWidget):
             elif result['part_of_speech'] == "auxv":
                 auxiliaryVerbs.append(result['malayalam_definition'])
 
+            elif result['part_of_speech'] == "idm":
+                idioms.append(result['malayalam_definition'])
+            else:
+                meanings.append(result['malayalam_definition'])
+
+
+
+
+
+
+            meaningHtmlContent = "" if len(meanings) == 0 else  '''<hr/>
+            <h3>അര്‍ത്ഥം <span> :Meaning</span></h3>
+            <hr/>'''
+
+
+            for meaning in meanings:
+                meaningHtmlContent += '''
+                <li><h4>{0}</h4></li>
+                '''.format(meaning)
+            
+
 
             nounHtmlContent = "" if len(nouns) == 0 else  '''<hr/>
             <h3>നാമം <span>:Noun</span></h3>
@@ -134,7 +165,7 @@ class NighanduGui(QWidget):
 
             for noun in nouns:
                 nounHtmlContent += '''
-                <li>{0}</li>
+                <li><h4>{0}</h4></li>
                 '''.format(noun)
             
 
@@ -146,7 +177,7 @@ class NighanduGui(QWidget):
             '''
             for verb in verbs:
                 verbHtmlContent += '''
-                <li>{0}</li>
+                <li><h4>{0}</h4></li>
                 '''.format(verb)
 
 
@@ -155,7 +186,7 @@ class NighanduGui(QWidget):
             <hr/>'''
             for adjective in adjectives:
                 adjectivesHtmlContent += '''
-                <li>{0}</li>
+                <li><h4>{0}</h4></li>
                 '''.format(adjective)
             
 
@@ -167,10 +198,150 @@ class NighanduGui(QWidget):
             '''
             for adverb in adverbs:
                 adverbHtmlContent += '''
-                <li>{0}</li>
+                <li><h4>{0}</h4></li>
                 '''.format(adverb)
 
 
+
+
+            pronounHtmlContent = "" if len(pronouns) == 0 else  '''
+            <hr/>
+            <h3>സര്‍വ്വനാമം<span> :Pronoun</span></h3>
+            <hr/>
+            '''
+            for pronoun in pronouns:
+                pronounHtmlContent += '''
+                <li><h4>{0}</h4></li>
+                '''.format(pronoun)
+
+
+
+
+
+            propernounHtmlContent = "" if len(properNouns) == 0 else  '''
+            <hr/>
+            <h3>സംജ്ഞാനാമം<span> :Proper noun</span></h3>
+            <hr/>
+            '''
+            for propnoun in properNouns:
+                propernounHtmlContent += '''
+                <li><h4>{0}</h4></li>
+                '''.format(propnoun)
+
+
+
+            phrasalVerbHtmlContent = "" if len(phrasalVerbs) == 0 else  '''
+            
+            <hr/>
+            <h3>ഉപവാക്യ ക്രിയ<span> :Phrasal verb</span></h3>
+            <hr/>
+            '''
+            for phrasalVerb in phrasalVerbs:
+                phrasalVerbHtmlContent += '''
+                <li><h4>{0}</h4></li>
+                '''.format(phrasalVerb)
+
+
+
+            conjunctionHtmlContent = "" if len(conjunctions) == 0 else  '''
+            
+            <hr/>
+            <h3>അവ്യയം<span>:Conjunction</span></h3>
+            <hr/>
+            '''
+            for conjunction in conjunctions:
+                conjunctionHtmlContent += '''
+                <li><h4>{0}</h4></li>
+                '''.format(conjunction)
+
+
+
+            interjectionHtmlContent = "" if len(interjections) == 0 else  '''
+            
+            <hr/>
+            <h3>വ്യാക്ഷേപകം<span> :interjection</span></h3>
+            <hr/>
+            '''
+            for interjection in interjections:
+                interjectionHtmlContent += '''
+                <li>{0}</li>
+                '''.format(interjection)
+
+
+
+
+            prepositionHtmlContent = "" if len(prepositions) == 0 else  '''
+            
+            <hr/>
+            <h3>വ്യാക്ഷേപകം<span> :preposition</span></h3>
+            <hr/>
+            '''
+            for preposition in prepositions:
+                prepositionHtmlContent += '''
+                <li>{0}</li>
+                '''.format(preposition)
+
+
+            prefixHtmlContent = "" if len(prefixs) == 0 else  '''
+            
+            <hr/>
+            <h3>പൂർവ്വപ്രത്യയം<span> :Prefix</span></h3>
+            <hr/>
+            '''
+            for prefix in prefixs:
+                prefixHtmlContent += '''
+                <li>{0}</li>
+                '''.format(prefix)
+
+
+
+            suffixHtmlContent = "" if len(suffixs) == 0 else  '''
+            
+            <hr/>
+            <h3>പ്രത്യയം<span> :Suffix</span></h3>
+            <hr/>
+            '''
+            for suffix in suffixs:
+                suffixHtmlContent += '''
+                <li>{0}</li>
+                '''.format(suffix)
+
+
+
+            abbrHtmlContent = "" if len(abbreviations) == 0 else  '''
+            
+            <hr/>
+            <h3>പ്രത്യയം<span> :Suffix</span></h3>
+            <hr/>
+            '''
+            for abbr in abbreviations:
+                abbrHtmlContent += '''
+                <li>{0}</li>
+                '''.format(abbr)
+
+
+            auxiliaryVerbHtmlContent = "" if len(auxiliaryVerbs) == 0 else  '''
+            
+            <hr/>
+            <h3>പൂരകകൃതി <span> :Auxiliary verb</span></h3>
+            <hr/>
+            '''
+            for auxv in auxiliaryVerbs:
+                auxiliaryVerbHtmlContent  += '''
+                <li>{0}</li>
+                '''.format(auxv)
+
+
+            idiomsHtmlContent = "" if len(idioms) == 0 else  '''
+            
+            <hr/>
+            <h3>പൂരകകൃതി <span> :Idioms</span></h3>
+            <hr/>
+            '''
+            for idiom in idioms:
+                idiomsHtmlContent  += '''
+                <li>{0}</li>
+                '''.format(idiom)
 
 
             htmlContent = '''
@@ -189,9 +360,40 @@ class NighanduGui(QWidget):
 
             {4}
 
+
+            {5}
+
+            {6}
+
+            {7}
+
+            {8}
+
+            {9}
+
+            {10}
+
+
+            {11}
+
+            {12}
+
+
+            {13}
+
+            {14}
+
+
+            {15}
+
+            {16}
+
             </ul>
 
-            '''.format(self.wordInput.text().strip(), nounHtmlContent, verbHtmlContent, adjectivesHtmlContent, adverbHtmlContent)
+            '''.format(self.wordInput.text().strip(), meaningHtmlContent, nounHtmlContent, verbHtmlContent, adjectivesHtmlContent, 
+                adverbHtmlContent, pronounHtmlContent, propernounHtmlContent, phrasalVerbHtmlContent, conjunctionHtmlContent,
+                interjectionHtmlContent, prepositionHtmlContent, prefixHtmlContent, suffixHtmlContent, abbrHtmlContent, auxiliaryVerbHtmlContent,
+                idiomsHtmlContent)
 
 
         return htmlContent

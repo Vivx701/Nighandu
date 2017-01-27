@@ -31,6 +31,9 @@ class Nighandu(object):
         else:
             return None
 
+    def word_list(self):
+        return self.data_set.keys()
+
 
 
 
