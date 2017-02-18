@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPushButton, QListView
 from PyQt5.QtWidgets import QSizePolicy, QScrollArea,  QCompleter
-from PyQt5.QtCore import Qt,  pyqtSlot
+from PyQt5.QtCore import Qt,  pyqtSlot, QModelIndex
 from nighandu import Nighandu
 
 
@@ -20,7 +20,7 @@ class NighanduGui(QWidget):
         #widget properties 
         self.setMinimumSize(340, 420)
 
-        mainLayout = QVBoxLayout()
+        mainLayout = QHBoxLayout()
        
 
         #inputs Widgets
@@ -29,7 +29,6 @@ class NighanduGui(QWidget):
         self.searchButton.setFixedSize(80, 30)
         self.searchButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.searchButton.clicked.connect(self.searchButtonClicked)
-
 
         wordList = self.nighandu.word_list()
         self.wordInput = QLineEdit(self)
@@ -40,12 +39,25 @@ class NighanduGui(QWidget):
         self.wordInput.setCompleter(completer)
 
 
+
         self.wordInput.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.wordInput.returnPressed.connect(self.searchButtonClicked)
 
         inputLayout.addWidget(self.wordInput)
         inputLayout.addWidget(self.searchButton)
-        mainLayout.addLayout(inputLayout)
+
+        leftControlsLayout = QVBoxLayout()
+        leftControlsLayout.addLayout(inputLayout)
+
+
+        suggesionsList = QListView(self)
+        suggesionsList.setEditTriggers(QListView.NoEditTriggers)
+        suggesionsList.setModel(completer.completionModel())
+        suggesionsList.clicked.connect(self.suggesionsListClicked)
+        leftControlsLayout.addWidget(suggesionsList)
+
+
+        mainLayout.addLayout(leftControlsLayout)
 
 
         self.wordViewerLabel = QLabel(self)
@@ -77,6 +89,18 @@ class NighanduGui(QWidget):
            
            txt = self.formatResults(results)
         self.wordViewerLabel.setText(txt)
+
+    @pyqtSlot(QModelIndex)
+    def suggesionsListClicked(self, index):
+
+        results = self.searchMeaning(index.data())
+
+        if results == None:
+            txt ="Sorry No results Found"
+        else:           
+           txt = self.formatResults(results)
+        self.wordViewerLabel.setText(txt)
+
 
 
 
