@@ -1,28 +1,50 @@
 import sys
+import os
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPushButton, QListView
 from PyQt5.QtWidgets import QSizePolicy, QScrollArea,  QCompleter
 from PyQt5.QtCore import Qt,  pyqtSlot, QModelIndex
+from PyQt5.QtCore import QStandardPaths
+import requests, zipfile, io
 from nighandu import Nighandu
+import asyncio
 
 
+OLAM_DATASET_URL = "https://olam.in/open/enml/olam-enml.csv.zip"
+HOME_PATH = QStandardPaths.writableLocation(QStandardPaths.HomeLocation)
+FILES_DIR = os.path.join(HOME_PATH, ".Nighandu")
 class NighanduGui(QWidget):
 
     def __init__(self, parent=None):
         super(NighanduGui, self).__init__(parent)
 
-        self.nighandu = Nighandu("olam-enml.csv")
         self.window().setWindowTitle("Nighandu")
+        self.initApp()
         self.initUI()
+
+    async def downloadOlamDataset(self, url, saveLocation):
+        r = requests.get(url)
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        z.extractall(saveLocation)
+      
+
+    def initApp(self):
+        
+        if not os.path.exists(FILES_DIR):
+            os.mkdir(FILES_DIR)
+        
+        csvFile = os.path.join(FILES_DIR, "olam-enml.csv")
+        if not os.path.exists(csvFile):
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(self.downloadOlamDataset(OLAM_DATASET_URL, FILES_DIR))
+        
+        self.nighandu = Nighandu(csvFile)
 
     def initUI(self):
 
-        
         #widget properties 
-        self.setMinimumSize(340, 420)
-
+        self.setMinimumSize(895, 680)
         mainLayout = QHBoxLayout()
        
-
         #inputs Widgets
         inputLayout = QHBoxLayout()
         self.searchButton = QPushButton("&Search", self)
@@ -38,8 +60,6 @@ class NighanduGui(QWidget):
         completer.setCaseSensitivity(Qt.CaseInsensitive)
         self.wordInput.setCompleter(completer)
 
-
-
         self.wordInput.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.wordInput.returnPressed.connect(self.searchButtonClicked)
 
@@ -49,17 +69,12 @@ class NighanduGui(QWidget):
         leftControlsLayout = QVBoxLayout()
         leftControlsLayout.addLayout(inputLayout)
 
-
         suggesionsList = QListView(self)
         suggesionsList.setEditTriggers(QListView.NoEditTriggers)
         suggesionsList.setModel(completer.completionModel())
         suggesionsList.clicked.connect(self.suggesionsListClicked)
         leftControlsLayout.addWidget(suggesionsList)
-
-
         mainLayout.addLayout(leftControlsLayout)
-
-
         self.wordViewerLabel = QLabel(self)
         self.wordViewerScrollArea = QScrollArea(self)
         self.wordViewerScrollArea.setWidgetResizable(True)
@@ -67,7 +82,6 @@ class NighanduGui(QWidget):
         self.wordViewerScrollArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.wordViewerLabel.setMargin(20)
         self.wordViewerLabel.setAlignment(Qt.AlignTop)
-
         mainLayout.addWidget(self.wordViewerScrollArea)
  
         self.setLayout(mainLayout)
@@ -79,8 +93,6 @@ class NighanduGui(QWidget):
         #change case
         word = self.wordInput.text().lower()
         word = word.replace(word[0], word[0].upper(), 1)
- 
-
         results = self.searchMeaning(word)
 
         if results == None:
@@ -100,9 +112,6 @@ class NighanduGui(QWidget):
         else:           
            txt = self.formatResults(results)
         self.wordViewerLabel.setText(txt)
-
-
-
 
     def formatResults(self, results):
 
@@ -164,10 +173,6 @@ class NighanduGui(QWidget):
                 idioms.append(result['malayalam_definition'])
             else:
                 meanings.append(result['malayalam_definition'])
-
-
-
-
 
 
             meaningHtmlContent = "" if len(meanings) == 0 else  '''<hr/>
@@ -238,10 +243,6 @@ class NighanduGui(QWidget):
                 <li><h4>{0}</h4></li>
                 '''.format(pronoun)
 
-
-
-
-
             propernounHtmlContent = "" if len(properNouns) == 0 else  '''
             <hr/>
             <h3>സംജ്ഞാനാമം<span> :Proper noun</span></h3>
@@ -251,8 +252,6 @@ class NighanduGui(QWidget):
                 propernounHtmlContent += '''
                 <li><h4>{0}</h4></li>
                 '''.format(propnoun)
-
-
 
             phrasalVerbHtmlContent = "" if len(phrasalVerbs) == 0 else  '''
             
@@ -264,8 +263,6 @@ class NighanduGui(QWidget):
                 phrasalVerbHtmlContent += '''
                 <li><h4>{0}</h4></li>
                 '''.format(phrasalVerb)
-
-
 
             conjunctionHtmlContent = "" if len(conjunctions) == 0 else  '''
             
@@ -290,9 +287,6 @@ class NighanduGui(QWidget):
                 interjectionHtmlContent += '''
                 <li>{0}</li>
                 '''.format(interjection)
-
-
-
 
             prepositionHtmlContent = "" if len(prepositions) == 0 else  '''
             
@@ -418,8 +412,6 @@ class NighanduGui(QWidget):
                 adverbHtmlContent, pronounHtmlContent, propernounHtmlContent, phrasalVerbHtmlContent, conjunctionHtmlContent,
                 interjectionHtmlContent, prepositionHtmlContent, prefixHtmlContent, suffixHtmlContent, abbrHtmlContent, auxiliaryVerbHtmlContent,
                 idiomsHtmlContent)
-
-
         return htmlContent
 
     def searchMeaning(self, word):
