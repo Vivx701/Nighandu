@@ -1,7 +1,7 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QLabel, QPushButton, QListView
-from PyQt5.QtWidgets import QSizePolicy, QScrollArea,  QCompleter
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QLabel, QPushButton, QListView
+from PyQt5.QtWidgets import QSizePolicy, QScrollArea, QCompleter, QHBoxLayout,  QDialog
 from PyQt5.QtCore import Qt,  pyqtSlot, QModelIndex
 from PyQt5.QtCore import QStandardPaths
 import requests, zipfile, io
@@ -82,7 +82,33 @@ class NighanduGui(QWidget):
         self.wordViewerScrollArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.wordViewerLabel.setMargin(20)
         self.wordViewerLabel.setAlignment(Qt.AlignTop)
-        mainLayout.addWidget(self.wordViewerScrollArea)
+        #initial font size
+        font = self.wordViewerLabel.font()
+        font.setPixelSize(15)
+        self.wordViewerLabel.setFont(font) 
+        self.wordViewerLabel.setText("<center> <h1> Nighandu </h1></center>")       
+
+
+        self.zoomInButton = QPushButton("ZoomIn (+)", self)
+        self.zoomInButton.clicked.connect(self.zoomIn)
+        self.zoomOutButton = QPushButton("ZoomOut (-)", self)
+        self.zoomOutButton.clicked.connect(self.zoomOut)
+
+        self.aboutButton = QPushButton("About", self)
+        self.aboutButton.clicked.connect(self.about)
+
+
+        zoomButtonLayout = QHBoxLayout()
+        zoomButtonLayout.addWidget(self.aboutButton)
+        zoomButtonLayout.addStretch()
+        zoomButtonLayout.addWidget(self.zoomInButton)
+        zoomButtonLayout.addWidget(self.zoomOutButton)
+        
+        rightConrolsLayout = QVBoxLayout()
+        rightConrolsLayout.addWidget(self.wordViewerScrollArea)
+        rightConrolsLayout.addLayout(zoomButtonLayout)
+
+        mainLayout.addLayout(rightConrolsLayout)
  
         self.setLayout(mainLayout)
 
@@ -418,7 +444,55 @@ class NighanduGui(QWidget):
         results = self.nighandu.search_word(word)
         return results
 
- 
+    @pyqtSlot()
+    def zoomIn(self):
+
+        font = self.wordViewerLabel.font()
+        fontSize = font.pixelSize()
+        font.setPixelSize(fontSize+3)
+        self.wordViewerLabel.setFont(font)
+
+    @pyqtSlot()
+    def zoomOut(self):
+
+        font = self.wordViewerLabel.font()
+        fontSize = font.pixelSize()
+        font.setPixelSize(fontSize-3)
+        self.wordViewerLabel.setFont(font)
+
+    @pyqtSlot()
+    def about(self):
+        
+        content = """
+        <center>
+        <h2> Nighandu </h2>
+        <p>
+        Nighandu is an free opensoure english malayalam dictionary software. <br/>
+        This is based on <a href="https://olam.in/open/enml/">Olam English-Malayalam dictionary dataset</a>
+        
+        <br/>
+        <br/>
+        <br/>
+        Project: https://github.com/Vivx701/Nighandu
+        <br/>
+        Developer: Vivek.P (https://github.com/Vivx701)
+        <br/>
+        </p>
+        </center>
+        """
+        contentLayout = QHBoxLayout()
+        contentLabel = QLabel(self)
+        contentLabel.setText(content)
+        contentLayout.addWidget(contentLabel)
+        contentLayout.addStretch()
+        dialog = QDialog(self)
+        dialog.window().setWindowTitle("About")
+        dialog.setLayout(contentLayout)
+        dialog.exec()
+        
+
+
+
 
 if __name__ == "__main__":
 
